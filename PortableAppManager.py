@@ -221,7 +221,7 @@ class AppManager(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Portable App Manager")
-        self.setWindowIcon(self.get_svg_icon(self.get_svg_string("app_icon"), 20))
+        self.setWindowIcon(QIcon("https://raw.githubusercontent.com/sayedatiqurrahman/winPortableAppManager/5a752ca117c5b198d97d96fab8af6000d616e981/headIcon.ico"))
         self.resize(1100, 700)
         self.setStyleSheet("""
             * {
