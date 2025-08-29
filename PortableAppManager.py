@@ -221,7 +221,7 @@ class AppManager(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Portable App Manager")
-        self.setWindowIcon(QIcon("https://raw.githubusercontent.com/sayedatiqurrahman/winPortableAppManager/5a752ca117c5b198d97d96fab8af6000d616e981/headIcon.ico"))
+        self.setWindowIcon(QIcon("headIcon.ico"))
         self.resize(1100, 700)
         self.setStyleSheet("""
             * {
@@ -808,6 +808,7 @@ class AppManager(QWidget):
     def cancel_worker(self):
         if self.worker:
             self.worker.cancel()
+
 
 # --------------------------
 # Run
