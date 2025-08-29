@@ -6,7 +6,7 @@ a = Analysis(
     ['PortableAppManager.py'],
     pathex=[],
     binaries=[],
-    datas=[('headIcon.ico', '.')],
+    datas=[('/assets/headIcon.ico', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
