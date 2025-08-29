@@ -1,60 +1,47 @@
 ![New Project](https://github.com/user-attachments/assets/44490cb9-d2e8-4065-92b7-483ef161f317)
 
 
-Portable App Manager
-This is a simple, lightweight application to help you install and manage popular software directly on your Windows PC using the winget command-line tool. It provides a user-friendly graphical interface, so you don't have to remember complex commands.
+# Portable App Manager
 
-Key Features
-Simple Interface: A clean, grid-based layout for easy navigation.
+This is a simple, lightweight application to help you install and manage popular software directly on your Windows PC using the `winget` command-line tool. It provides a user-friendly graphical interface, so you don't have to remember complex commands.
 
-App Discovery: Browse a curated list of essential applications across various categories.
+### Key Features
+* **Simple Interface:** A clean, grid-based layout for easy navigation.
+* **App Discovery:** Browse a curated list of essential applications across various categories.
+* **Easy Installation:** Install apps with a single click without using the command line.
+* **One-Click Uninstallation:** Quickly remove installed applications from the "Installed Apps" tab.
+* **Progress Tracking:** Monitor the status of your installations and uninstallations in real-time.
 
-Easy Installation: Install apps with a single click without using the command line.
+### Why Use Portable App Manager?
+While the `winget` command is a powerful tool for managing software on Windows, its command-line nature can be challenging for some users. The Portable App Manager provides a simple, intuitive graphical interface to harness the power of `winget` without needing to touch the terminal.
 
-One-Click Uninstallation: Quickly remove installed applications from the "Installed Apps" tab.
+* **Time-Saving:** Quickly set up a new computer by installing all your essential applications in a single, streamlined process.
+* **User-Friendly:** Avoid the hassle of memorizing commands. With a clean, visual layout, you can browse, select, and install apps with just a few clicks.
+* **Centralized Management:** Keep track of your applications easily. See what's installed and remove software you no longer need from one convenient place.
 
-Progress Tracking: Monitor the status of your installations and uninstallations in real-time.
-
-Why Use Portable App Manager?
-While the winget command is a powerful tool for managing software on Windows, its command-line nature can be challenging for some users. The Portable App Manager provides a simple, intuitive graphical interface to harness the power of winget without needing to touch the terminal.
-
-Time-Saving: Quickly set up a new computer by installing all your essential applications in a single, streamlined process.
-
-User-Friendly: Avoid the hassle of memorizing commands. With a clean, visual layout, you can browse, select, and install apps with just a few clicks.
-
-Centralized Management: Keep track of your applications easily. See what's installed and remove software you no longer need from one convenient place.
-
-Scenario:
+**Scenario:**
 Imagine you just got a new laptop. Instead of visiting a dozen different websites to download Google Chrome, VLC Player, VS Code, and WhatsApp, you can simply open this app, check the boxes for the apps you want, and click "Install." The application will handle the rest for you.
 
-Installation & Usage
+### Installation & Usage
 The application is self-contained. You don't need any complex setup.
 
-Download the executable file: Get the latest release from the link below.
+1.  **Download the executable file:** Get the latest release from the link below.
+2.  **Run the file:** Double-click the `.exe` file to launch the application.
+3.  **Install Apps:**
+    * Navigate to the "অ্যাপ ইনস্টল করুন" (Install Apps) tab.
+    * Select the applications you want by checking the box next to their names.
+    * Click the "নির্বাচিত অ্যাপ ইনস্টল করুন" (Install Selected Apps) button.
+4.  **Manage Installed Apps:**
+    * Go to the "ইনস্টল করা অ্যাপস" (Installed Apps) tab.
+    * The list will show you all apps installed via this manager. You can click "আনইনস্টল করুন" (Uninstall) to remove them.
 
-Run the file: Double-click the .exe file to launch the application.
-
-Install Apps:
-
-Navigate to the "অ্যাপ ইনস্টল করুন" (Install Apps) tab.
-
-Select the applications you want by checking the box next to their names.
-
-Click the "নির্বাচিত অ্যাপ ইনস্টল করুন" (Install Selected Apps) button.
-
-Manage Installed Apps:
-
-Go to the "ইনস্টল করা অ্যাপস" (Installed Apps) tab.
-
-The list will show you all apps installed via this manager. You can click "আনইনস্টল করুন" (Uninstall) to remove them.
-
-Download
+### Download
 You can download the latest release of the application from the GitHub Releases page:
 
-Download Portable App Manager v1.0.0
+**[Download Portable App Manager v1.0.0](https://github.com/sayedatiqurrahman/winPortableAppManager/releases/tag/v1.0.0)**
 
-Contributing
+### Contributing
 We welcome contributions! If you have a suggestion for an app to add or a bug to report, please open an issue or submit a pull request.
 
-License
+### License
 This project is licensed under the MIT License.
