@@ -2,14 +2,14 @@ import sys
 import subprocess
 import shlex
 import re
-from PySide6.QtCore import Qt, QThread, Signal, QSize
-from PySide6.QtGui import QIcon, QPixmap, QDesktopServices, QCursor
+from PySide6.QtCore import Qt, QThread, Signal
+from PySide6.QtGui import QIcon, QPixmap, QPainter
+from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QTabWidget,
     QLineEdit, QPushButton, QLabel, QTreeWidget, QTreeWidgetItem,
     QMessageBox, QScrollArea, QGridLayout, QFrame, QCheckBox,
-    QProgressBar, QTextEdit, QToolButton, QSizePolicy, QApplication,
-    QStyle # Import QStyle for standard icons
+    QProgressBar, QTextEdit, QToolButton, QSizePolicy
 )
 
 # --------------------------
@@ -17,80 +17,89 @@ from PySide6.QtWidgets import (
 # --------------------------
 APPS = [
     # Browsers
-    {"Name":"Google Chrome","Id":"Google.Chrome","Category":"Browsers"},
-    {"Name":"Mozilla Firefox","Id":"Mozilla.Firefox","Category":"Browsers"},
-    {"Name":"Microsoft Edge","Id":"Microsoft.Edge","Category":"Browsers"},
-    {"Name":"Brave","Id":"Brave.Brave","Category":"Browsers"},
-    {"Name":"Opera","Id":"Opera.Opera","Category":"Browsers"},
+    {"Name": "Google Chrome", "Id": "Google.Chrome", "Category": "Browsers"},
+    {"Name": "Mozilla Firefox", "Id": "Mozilla.Firefox", "Category": "Browsers"},
+    {"Name": "Microsoft Edge", "Id": "Microsoft.Edge", "Category": "Browsers"},
+    {"Name": "Brave", "Id": "Brave.Brave", "Category": "Browsers"},
+    {"Name": "Opera", "Id": "Opera.Opera", "Category": "Browsers"},
 
     # Messaging
-    {"Name":"WhatsApp Desktop","Id":"WhatsApp.WhatsApp","Category":"Messaging"},
-    {"Name":"Telegram Desktop","Id":"Telegram.TelegramDesktop","Category":"Messaging"},
-    {"Name":"Discord","Id":"Discord.Discord","Category":"Messaging"},
-    {"Name":"Zoom","Id":"Zoom.Zoom","Category":"Messaging"},
-    {"Name":"Skype","Id":"Microsoft.Skype","Category":"Messaging"},
-    {"Name":"Slack","Id":"SlackTechnologies.Slack","Category":"Messaging"},
+    {"Name": "WhatsApp Desktop", "Id": "WhatsApp.WhatsApp", "Category": "Messaging"},
+    {"Name": "Telegram Desktop", "Id": "Telegram.TelegramDesktop", "Category": "Messaging"},
+    {"Name": "Discord", "Id": "Discord.Discord", "Category": "Messaging"},
+    {"Name": "Zoom", "Id": "Zoom.Zoom", "Category": "Messaging"},
+    {"Name": "Skype", "Id": "Microsoft.Skype", "Category": "Messaging"},
+    {"Name": "Slack", "Id": "SlackTechnologies.Slack", "Category": "Messaging"},
 
     # Multimedia / Design
-    {"Name":"VLC Media Player","Id":"VideoLAN.VLC","Category":"Multimedia"},
-    {"Name":"Spotify","Id":"Spotify.Spotify","Category":"Multimedia"},
-    {"Name":"OBS Studio","Id":"OBSProject.OBSStudio","Category":"Multimedia"},
-    {"Name":"GIMP","Id":"GIMP.GIMP","Category":"Multimedia"},
-    {"Name":"Paint.NET","Id":"dotPDN.Paint.NET","Category":"Multimedia"},
-    {"Name":"Audacity","Id":"Audacity.Audacity","Category":"Multimedia"},
-    {"Name":"PotPlayer","Id":"DAUM.PotPlayer","Category":"Multimedia"},
-    {"Name":"foobar2000","Id":"foobar2000.foobar2000","Category":"Multimedia"},
-    {"Name":"Krita","Id":"Krita.Krita","Category":"Design"},
-    {"Name":"Inkscape","Id":"Inkscape.Inkscape","Category":"Design"},
-    {"Name":"Blender","Id":"BlenderFoundation.Blender","Category":"Design"},
-    {"Name":"Aseprite","Id":"Aseprite.Aseprite","Category":"Design"},
+    {"Name": "VLC Media Player", "Id": "VideoLAN.VLC", "Category": "Multimedia"},
+    {"Name": "Spotify", "Id": "Spotify.Spotify", "Category": "Multimedia"},
+    {"Name": "OBS Studio", "Id": "OBSProject.OBSStudio", "Category": "Multimedia"},
+    {"Name": "GIMP", "Id": "GIMP.GIMP", "Category": "Multimedia"},
+    {"Name": "Paint.NET", "Id": "dotPDN.Paint.NET", "Category": "Multimedia"},
+    {"Name": "Audacity", "Id": "Audacity.Audacity", "Category": "Multimedia"},
+    {"Name": "PotPlayer", "Id": "DAUM.PotPlayer", "Category": "Multimedia"},
+    {"Name": "foobar2000", "Id": "foobar2000.foobar2000", "Category": "Multimedia"},
+    {"Name": "Krita", "Id": "Krita.Krita", "Category": "Design"},
+    {"Name": "Inkscape", "Id": "Inkscape.Inkscape", "Category": "Design"},
+    {"Name": "Blender", "Id": "BlenderFoundation.Blender", "Category": "Design"},
+    {"Name": "Aseprite", "Id": "Aseprite.Aseprite", "Category": "Design"},
 
     # Development / AI
-    {"Name":"Visual Studio Code","Id":"Microsoft.VisualStudioCode","Category":"Development"},
-    {"Name":"Git","Id":"Git.Git","Category":"Development"},
-    {"Name":"Node.js LTS","Id":"OpenJS.NodeJS.LTS","Category":"Development"},
-    {"Name":"Python 3","Id":"Python.Python.3","Category":"Development"},
-    {"Name":"Java","Id":"Oracle.JavaRuntimeEnvironment","Category":"Development"},
-    {"Name":"Docker Desktop","Id":"Docker.DockerDesktop","Category":"Development"},
-    {"Name":"Postman","Id":"Postman.Postman","Category":"Development"},
-    {"Name":"IntelliJ IDEA Community","Id":"JetBrains.IntelliJIDEA.Community","Category":"Development"},
-    {"Name":"PyCharm Community","Id":"JetBrains.PyCharm.Community","Category":"Development"},
-    {"Name":"Anaconda","Id":"Anaconda.Anaconda","Category":"AI/ML"},
-    {"Name":"Miniconda","Id":"Miniconda.Miniconda3","Category":"AI/ML"},
-    {"Name":"Power BI Desktop","Id":"Microsoft.PowerBIDesktop","Category":"AI/ML"},
+    {"Name": "Visual Studio Code", "Id": "Microsoft.VisualStudioCode", "Category": "Development"},
+    {"Name": "Git", "Id": "Git.Git", "Category": "Development"},
+    {"Name": "Node.js LTS", "Id": "OpenJS.NodeJS.LTS", "Category": "Development"},
+    {"Name": "Python 3", "Id": "Python.Python.3", "Category": "Development"},
+    {"Name": "Java", "Id": "Oracle.JavaRuntimeEnvironment", "Category": "Development"},
+    {"Name": "Docker Desktop", "Id": "Docker.DockerDesktop", "Category": "Development"},
+    {"Name": "Postman", "Id": "Postman.Postman", "Category": "Development"},
+    {"Name": "IntelliJ IDEA Community", "Id": "JetBrains.IntelliJIDEA.Community", "Category": "Development"},
+    {"Name": "PyCharm Community", "Id": "JetBrains.PyCharm.Community", "Category": "Development"},
+    {"Name": "Anaconda", "Id": "Anaconda.Anaconda", "Category": "AI/ML"},
+    {"Name": "Miniconda", "Id": "Miniconda.Miniconda3", "Category": "AI/ML"},
+    {"Name": "Power BI Desktop", "Id": "Microsoft.PowerBIDesktop", "Category": "AI/ML"},
 
     # Utilities
-    {"Name":"7-Zip","Id":"7zip.7zip","Category":"Utilities"},
-    {"Name":"WinRAR","Id":"RARLab.WinRAR","Category":"Utilities"},
-    {"Name":"Notepad++","Id":"Notepad++.Notepad++","Category":"Utilities"},
-    {"Name":"Everything Search","Id":"Voidtools.Everything","Category":"Utilities"},
-    {"Name":"CCleaner","Id":"Piriform.CCleaner","Category":"Utilities"},
-    {"Name":"ShareX","Id":"ShareX.ShareX","Category":"Utilities"},
-    {"Name":"PowerToys","Id":"Microsoft.PowerToys","Category":"Utilities"},
+    {"Name": "7-Zip", "Id": "7zip.7zip", "Category": "Utilities"},
+    {"Name": "WinRAR", "Id": "RARLab.WinRAR", "Category": "Utilities"},
+    {"Name": "Notepad++", "Id": "Notepad++.Notepad++", "Category": "Utilities"},
+    {"Name": "Everything Search", "Id": "Voidtools.Everything", "Category": "Utilities"},
+    {"Name": "CCleaner", "Id": "Piriform.CCleaner", "Category": "Utilities"},
+    {"Name": "ShareX", "Id": "ShareX.ShareX", "Category": "Utilities"},
+    {"Name": "PowerToys", "Id": "Microsoft.PowerToys", "Category": "Utilities"},
 
     # Office
-    {"Name":"LibreOffice","Id":"TheDocumentFoundation.LibreOffice","Category":"Office"},
-    {"Name":"OnlyOffice Desktop Editors","Id":"Ascensio.OnlyOffice","Category":"Office"},
-    {"Name":"Microsoft To Do","Id":"Microsoft.Todos","Category":"Office"},
-    {"Name":"Evernote","Id":"Evernote.Evernote","Category":"Office"},
-    {"Name":"Google Drive","Id":"Google.Drive","Category":"Office"},
-    {"Name":"Dropbox","Id":"Dropbox.Dropbox","Category":"Office"},
+    {"Name": "LibreOffice", "Id": "TheDocumentFoundation.LibreOffice", "Category": "Office"},
+    {"Name": "OnlyOffice Desktop Editors", "Id": "Ascensio.OnlyOffice", "Category": "Office"},
+    {"Name": "Microsoft To Do", "Id": "Microsoft.Todos", "Category": "Office"},
+    {"Name": "Evernote", "Id": "Evernote.Evernote", "Category": "Office"},
+    {"Name": "Google Drive", "Id": "Google.Drive", "Category": "Office"},
+    {"Name": "Dropbox", "Id": "Dropbox.Dropbox", "Category": "Office"},
 
     # Gaming
-    {"Name":"Steam","Id":"Valve.Steam","Category":"Gaming"},
-    {"Name":"Epic Games Launcher","Id":"EpicGames.EpicGamesLauncher","Category":"Gaming"},
-    {"Name":"Origin","Id":"ElectronicArts.Origin","Category":"Gaming"},
-    {"Name":"Battle.net","Id":"Blizzard.BattleNet","Category":"Gaming"},
-    {"Name":"GeForce Experience","Id":"NVIDIA.GeForceExperience","Category":"Gaming"},
-    {"Name":"MSI Afterburner","Id":"MSI.Afterburner","Category":"Gaming"},
-    {"Name":"Razer Synapse","Id":"Razer.RazerSynapse","Category":"Gaming"},
+    {"Name": "Steam", "Id": "Valve.Steam", "Category": "Gaming"},
+    {"Name": "Epic Games Launcher", "Id": "EpicGames.EpicGamesLauncher", "Category": "Gaming"},
+    {"Name": "Origin", "Id": "ElectronicArts.Origin", "Category": "Gaming"},
+    {"Name": "Battle.net", "Id": "Blizzard.BattleNet", "Category": "Gaming"},
+    {"Name": "GeForce Experience", "Id": "NVIDIA.GeForceExperience", "Category": "Gaming"},
+    {"Name": "MSI Afterburner", "Id": "MSI.Afterburner", "Category": "Gaming"},
+    {"Name": "Razer Synapse", "Id": "Razer.RazerSynapse", "Category": "Gaming"},
 
     # PC Test
-    {"Name":"CPU-Z","Id":"CPUID.CPU-Z","Category":"PC Test"},
-    {"Name":"HWMonitor","Id":"CPUID.HWMonitor","Category":"PC Test"},
-    {"Name":"CrystalDiskInfo","Id":"CrystalDewWorld.CrystalDiskInfo","Category":"PC Test"},
-    {"Name":"GPU-Z","Id":"TechPowerUp.GPU-Z","Category":"PC Test"},
+    {"Name": "CPU-Z", "Id": "CPUID.CPU-Z", "Category": "PC Test"},
+    {"Name": "HWMonitor", "Id": "CPUID.HWMonitor", "Category": "PC Test"},
+    {"Name": "CrystalDiskInfo", "Id": "CrystalDewWorld.CrystalDiskInfo", "Category": "PC Test"},
+    {"Name": "GPU-Z", "Id": "TechPowerUp.GPU-Z", "Category": "PC Test"},
 ]
+
+def svg_to_pixmap(svg_string: str, size: int):
+    renderer = QSvgRenderer(svg_string.encode('utf-8'))
+    pixmap = QPixmap(size, size)
+    pixmap.fill(Qt.transparent)
+    painter = QPainter(pixmap)
+    renderer.render(painter)
+    painter.end()
+    return pixmap
 
 # --------------------------
 # Winget helpers (robust parsing)
@@ -154,8 +163,8 @@ def winget_uninstall(app_id: str):
 # Worker thread
 # --------------------------
 class WorkerThread(QThread):
-    progress_signal = Signal(str, int)   # message, percent
-    finished_signal = Signal(str)        # summary
+    progress_signal = Signal(str, int)     # message, percent
+    finished_signal = Signal(str)          # summary
     def __init__(self, tasks, action_label):
         super().__init__()
         self.tasks = tasks[:]  # list of app ids
@@ -196,155 +205,80 @@ class AppManager(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Portable App Manager")
+        self.setWindowIcon(QIcon("headIcon.ico")) # Add the main window icon
         self.resize(1100, 700)
-        
-        # Set application icon
-        try:
-            self.setWindowIcon(QIcon("headIcon.ico"))
-        except Exception as e:
-            print(f"Could not load headIcon.ico: {e}")
-            pass # Fallback to default icon if not found
-
-        # Modern Dark Theme
+        # dark theme basics
         self.setStyleSheet("""
-            QWidget { 
-                background-color: #1a1a1a; 
-                color: #e0e0e0; 
-                font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; 
+            * {
+                font-family: 'Segoe UI', Arial, sans-serif;
                 font-size: 10pt;
             }
-            QTabWidget::pane {
-                border: 1px solid #333333;
-                background-color: #1a1a1a;
-                border-radius: 8px;
+            QWidget { 
+                background-color: #1a1a1a; 
+                color: #e8e8e8; 
             }
-            QTabWidget::tab-bar {
-                left: 5px; /* move to the right */
-            }
+            QTabWidget::pane { border: 1px solid #333; }
+            QTabWidget::tab-bar { left: 5px; }
             QTabBar::tab {
                 background: #2a2a2a;
-                border: 1px solid #333333;
-                border-bottom-color: #333333; /* same as pane color */
+                color: #c0c0c0;
+                border: 1px solid #333;
+                border-bottom-color: #1a1a1a; /* same as pane color */
                 border-top-left-radius: 8px;
                 border-top-right-radius: 8px;
-                min-width: 100px;
-                padding: 10px 15px;
-                color: #b0b0b0;
-                margin-right: 2px;
-            }
-            QTabBar::tab:selected, QTabBar::tab:hover {
-                background: #3a3a3a;
-                color: #ffffff;
+                min-width: 120px;
+                padding: 8px 15px;
             }
             QTabBar::tab:selected {
-                border-color: #4a4a4a;
-                border-bottom-color: #3a3a3a; /* overlap to show it's selected */
+                background: #1a1a1a;
+                color: #f0f0f0;
+                border-bottom: none;
             }
             QLineEdit, QTextEdit { 
-                background-color: #2b2b2b; 
+                background-color: #2a2a2a; 
                 color: #ffffff; 
-                border: 1px solid #444444; 
-                padding: 8px; 
-                border-radius: 5px;
+                border: 1px solid #444; 
+                padding: 6px; 
+                border-radius: 6px;
             }
             QPushButton { 
-                background-color: #007acc; 
+                background-color: #1f6feb; 
                 color: white; 
-                padding: 8px 15px; 
-                border-radius: 5px; 
+                padding: 8px 12px; 
+                border-radius: 6px;
                 border: none;
-                min-width: 80px;
             }
             QPushButton:hover {
-                background-color: #008fec;
-            }
-            QPushButton:pressed {
-                background-color: #006bb3;
+                background-color: #2b7afb;
             }
             QPushButton.secondary { 
-                background-color: #444444; 
-                color: #e0e0e0; 
+                background-color: #444; 
+                color: #ddd;
             }
             QPushButton.secondary:hover {
-                background-color: #555555;
+                background-color: #555;
             }
-            QPushButton.secondary:pressed {
-                background-color: #333333;
-            }
-            QToolButton { 
-                background: transparent;
-                color: #007acc;
+            QToolButton {
                 border: none;
-                font-size: 16pt;
-                padding: 5px;
-            }
-            QToolButton:hover {
-                color: #008fec;
-            }
-            QProgressBar {
-                border: 1px solid #444444;
-                border-radius: 5px;
-                text-align: center;
-                color: white;
-                background-color: #2b2b2b;
-            }
-            QProgressBar::chunk {
-                background-color: #007acc;
-                border-radius: 5px;
+                background-color: transparent;
             }
             QTreeWidget {
                 background-color: #1e1e1e;
-                alternate-background-color: #222222;
-                color: #e0e0e0;
-                border: 1px solid #333333;
-                border-radius: 5px;
+                color: #e8e8e8;
+                border: 1px solid #333;
+                border-radius: 8px;
                 padding: 5px;
-                font-size: 9pt;
+            }
+            QTreeWidget::item {
+                padding: 5px 0;
             }
             QHeaderView::section {
-                background-color: #333333;
+                background-color: #2a2a2a;
                 color: #ffffff;
                 padding: 5px;
-                border: 1px solid #444444;
-                font-weight: bold;
-            }
-            QScrollArea {
-                border: none;
-            }
-            QFrame#appCardFrame {
-                background-color:#2b2b2b; 
-                border-radius:8px; 
-                padding:8px;
-                border: 1px solid #3a3a3a;
-            }
-            QFrame#appCardFrame:hover { 
-                background-color:#3a3a3a; 
-                border: 1px solid #007acc;
-            }
-            QLabel { 
-                color: #e0e0e0; 
-            }
-            QCheckBox { 
-                color: #ffffff; 
-                spacing: 5px;
-            }
-            QCheckBox::indicator {
-                width: 16px;
-                height: 16px;
-                border: 1px solid #007acc;
-                border-radius: 3px;
-                background-color: #1e1e1e;
-            }
-            QCheckBox::indicator:checked {
-                background-color: #007acc;
-                border: 1px solid #007acc;
-                image: url(check_icon.png); /* You might need to provide a check_icon.png */
-            }
-            QCheckBox::indicator:hover {
-                border: 1px solid #008fec;
+                border: 1px solid #444;
             }
         """)
-
         self.task_queue = []
         self.worker = None
 
@@ -357,39 +291,46 @@ class AppManager(QWidget):
         self.setup_explore_tab()
         self.setup_installed_tab()
         self.setup_progress_tab()
-        
-        # Developer info at the bottom
-        dev_info_layout = QHBoxLayout()
-        dev_label = QLabel("Developed by ")
-        
-        self.dev_link = QLabel("<a href='https://github.com/sayedatiqurrahman' style='color:#007acc; text-decoration:none;'>Sayed Atiqur Rahman</a>")
-        self.dev_link.setOpenExternalLinks(True) # Make the link clickable
-        self.dev_link.setCursor(QCursor(Qt.PointingHandCursor)) # Change cursor on hover
-        self.dev_link.setStyleSheet("QLabel { font-weight: bold; }")
 
-        dev_info_layout.addStretch()
-        dev_info_layout.addWidget(dev_label)
-        dev_info_layout.addWidget(self.dev_link)
-        dev_info_layout.addStretch()
-        
-        root.addLayout(dev_info_layout)
-
+    # Helper function for creating icons from SVG strings
+    def get_svg_icon(self, svg_string: str):
+        pixmap = QPixmap(20, 20)
+        pixmap.fill(Qt.transparent)
+        renderer = QSvgRenderer(svg_string.encode('utf-8'))
+        painter = QPainter(pixmap)
+        renderer.render(painter)
+        painter.end()
+        return QIcon(pixmap)
 
     # ---------------- Winget Search Tab ----------------
     def setup_winget_tab(self):
         self.tab_winget = QWidget()
-        self.tabs.addTab(self.tab_winget, QIcon.fromTheme("system-search"), "Winget Search") # Added icon
+        self.tabs.addTab(self.tab_winget, QIcon(), "Winget Search")
+        # Add an icon to the tab
+        # Simplified SVG for a search icon
+        svg_search = """<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e8e8e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>"""
+        self.tabs.setTabIcon(0, self.get_svg_icon(svg_search))
+
         l = QVBoxLayout(self.tab_winget)
 
         top = QHBoxLayout()
         self.search_winget = QLineEdit()
         self.search_winget.setPlaceholderText("Type to search winget...")
-        self.btn_winget_search = QPushButton(QIcon.fromTheme("edit-find"), "Search") # Added icon
+        self.btn_winget_search = QPushButton("Search")
         self.btn_winget_search.setProperty("class", "secondary")
+        # Add icon to button
+        icon_search_btn = QIcon.fromTheme("system-search")
+        if not icon_search_btn.isNull():
+            self.btn_winget_search.setIcon(icon_search_btn)
         self.btn_winget_search.clicked.connect(self.on_winget_search)
-        self.btn_winget_install = QPushButton(QIcon.fromTheme("download"), "Install Selected") # Added icon
+
+        self.btn_winget_install = QPushButton("Install Selected")
+        # Add icon to button
+        icon_install_btn = QIcon.fromTheme("list-add")
+        if not icon_install_btn.isNull():
+            self.btn_winget_install.setIcon(icon_install_btn)
         self.btn_winget_install.clicked.connect(self.on_winget_install_selected)
-        top.addWidget(QLabel("Search:"))
+        
         top.addWidget(self.search_winget, 1)
         top.addWidget(self.btn_winget_search)
         top.addWidget(self.btn_winget_install)
@@ -406,14 +347,9 @@ class AppManager(QWidget):
             QMessageBox.information(self, "Info", "Type something to search.")
             return
         self.tree_winget.clear()
-        
-        # Show busy cursor while searching
-        QApplication.setOverrideCursor(Qt.WaitCursor)
         apps = winget_search_apps(q)
-        QApplication.restoreOverrideCursor()
-
         if not apps:
-            QMessageBox.information(self, "Info", "No results found for your query.")
+            QMessageBox.information(self, "Info", "No results.")
             return
         for a in apps:
             node = QTreeWidgetItem([a["Name"], a["Id"]])
@@ -431,18 +367,21 @@ class AppManager(QWidget):
     # ---------------- Explore Tab (categories + integrated winget-inject) ----------------
     def setup_explore_tab(self):
         self.tab_explore = QWidget()
-        self.tabs.addTab(self.tab_explore, QIcon.fromTheme("folder-open"), "Explore / Browse") # Added icon
+        self.tabs.addTab(self.tab_explore, QIcon(), "Explore / Browse")
+        # Add an icon to the tab
+        svg_explore = """<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e8e8e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-compass"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>"""
+        self.tabs.setTabIcon(1, self.get_svg_icon(svg_explore))
+
         v = QVBoxLayout(self.tab_explore)
 
         top = QHBoxLayout()
         self.search_explore = QLineEdit()
-        self.search_explore.setPlaceholderText("Filter preloaded apps or paste search term then press 'Add from Winget' ")
-        self.btn_add_winget = QPushButton(QIcon.fromTheme("add"), "Add from Winget")   # Added icon
+        self.search_explore.setPlaceholderText("Filter preloaded apps or paste search term then press 'Add from Winget'")
+        self.btn_add_winget = QPushButton("Add from Winget")
         self.btn_add_winget.setProperty("class", "secondary")
         self.btn_add_winget.clicked.connect(self.inject_winget_search_into_grid)
-        self.btn_install_update = QPushButton(QIcon.fromTheme("system-software-install"), "Install/Update Selected") # Added icon
+        self.btn_install_update = QPushButton("Install/Update Selected")
         self.btn_install_update.clicked.connect(self.install_selected_from_grid)
-        top.addWidget(QLabel("Search/Filter:"))
         top.addWidget(self.search_explore, 1)
         top.addWidget(self.btn_add_winget)
         top.addWidget(self.btn_install_update)
@@ -453,13 +392,13 @@ class AppManager(QWidget):
         scroll.setWidgetResizable(True)
         container = QWidget()
         self.grid = QVBoxLayout(container)
-        self.grid.setSpacing(18)   # spacing between category blocks
+        self.grid.setSpacing(18)
         scroll.setWidget(container)
         v.addWidget(scroll, 1)
 
         # Build category blocks
-        self.app_cards = []         # list of frames for search/filter
-        self.category_blocks = {}   # category -> list of frames
+        self.app_cards = []
+        self.category_blocks = {}
 
         categories = sorted({a["Category"] for a in APPS})
         for cat in categories:
@@ -474,7 +413,6 @@ class AppManager(QWidget):
 
     def _create_category_block(self, category_name):
         block_frame = QFrame()
-        block_frame.setObjectName("categoryBlockFrame") # Added object name for specific styling
         block_frame.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
         block_layout = QVBoxLayout(block_frame)
         # header: label + toggle button
@@ -483,11 +421,8 @@ class AppManager(QWidget):
         toggle.setText("▼")
         toggle.setCheckable(True)
         toggle.setChecked(True)
-        toggle.setStyleSheet("QToolButton { border: none; background: none; color: #007acc; font-weight: bold; font-size: 14pt; } QToolButton:hover { color: #008fec; }")
-        
         header_label = QLabel(category_name)
-        header_label.setStyleSheet("font-weight: bold; font-size: 13pt; margin-left:6px; color:#ffffff;") # Adjusted color
-        
+        header_label.setStyleSheet("font-weight: bold; font-size: 13pt; margin-left:6px; color:#9ad;")
         header_layout.addWidget(toggle)
         header_layout.addWidget(header_label)
         header_layout.addStretch()
@@ -496,7 +431,7 @@ class AppManager(QWidget):
         cards_container = QWidget()
         cards_layout = QGridLayout(cards_container)
         cards_layout.setSpacing(10)
-        cards_container._cards_layout = cards_layout  # store pointer
+        cards_container._cards_layout = cards_layout
         block_layout.addWidget(cards_container)
         # margins to prevent overlap with other categories
         block_frame.setContentsMargins(6, 10, 6, 10)
@@ -526,14 +461,18 @@ class AppManager(QWidget):
 
         # frame visual
         card = QFrame()
-        card.setObjectName("appCardFrame") # Added object name for specific styling
-        
+        card.setStyleSheet("""
+            QFrame{ background-color:#2a2a2a; border-radius:8px; padding:8px; }
+            QFrame:hover{ background-color:#333; }
+            QLabel { color: #eee; }
+            QCheckBox { color: #fff; }
+        """)
         card_layout = QVBoxLayout(card)
         chk = QCheckBox(app["Name"])
         chk.setStyleSheet("font-size:11pt; color: #eaeaea;")
         chk.app_id = app["Id"]
         lbl_id = QLabel(app["Id"])
-        lbl_id.setStyleSheet("font-size:9pt; color:#b0b0b0;") # Adjusted color
+        lbl_id.setStyleSheet("font-size:9pt; color:#aaa;")
         card_layout.addWidget(chk)
         card_layout.addWidget(lbl_id)
         # store references
@@ -543,23 +482,19 @@ class AppManager(QWidget):
         # add to grid
         layout.addWidget(card, r, c)
         self.app_cards.append(card)
-        self.category_blocks[cat]["next_pos"] = (r, c+1) if c+1 < 4 else (r+1, 0)
+        self.category_blocks[cat]["next_pos"] = (r, c + 1) if c + 1 < 4 else (r + 1, 0)
 
     def inject_winget_search_into_grid(self):
         term = self.search_explore.text().strip()
         if not term:
             QMessageBox.information(self, "Info", "Type a search term in the filter box to add results from Winget.")
             return
-        
-        QApplication.setOverrideCursor(Qt.WaitCursor)
         apps = winget_search_apps(term)
-        QApplication.restoreOverrideCursor()
-
         if not apps:
-            QMessageBox.information(self, "Info", "No winget results found for your search term.")
+            QMessageBox.information(self, "Info", "No winget results.")
             return
         # inject under a "Search Results" category (create if missing)
-        cat = "Search Results (Winget)"
+        cat = "Search Results"
         if cat not in self.category_blocks:
             self._create_category_block(cat)
         for a in apps:
@@ -568,16 +503,6 @@ class AppManager(QWidget):
             if already:
                 continue
             self._add_app_card(a)
-        
-        # Ensure the "Search Results" category is visible
-        if cat in self.category_blocks:
-            frame = self.category_blocks[cat]["frame"]
-            frame.setVisible(True) # Make category frame visible
-            # Find the toggle button and ensure it's checked
-            toggle_button = frame.findChild(QToolButton)
-            if toggle_button and not toggle_button.isChecked():
-                toggle_button.click() # Simulate click to open if closed
-
 
     def filter_explore_grid(self, text):
         q = text.strip().lower()
@@ -586,24 +511,6 @@ class AppManager(QWidget):
             aid = (card._app.get("Id") or "").lower()
             visible = (q in name) or (q in aid) or (q == "")
             card.setVisible(visible)
-            
-            # Hide/show category blocks based on visible cards
-            cat = card._app.get("Category", "Other")
-            if cat in self.category_blocks:
-                category_frame = self.category_blocks[cat]["frame"]
-                # A category block is visible if any of its cards are visible
-                if visible and category_frame.isHidden():
-                    category_frame.show()
-                elif not visible:
-                    # Check if all cards in this category are hidden
-                    all_hidden = True
-                    for other_card in self.app_cards:
-                        if other_card._app.get("Category") == cat and other_card.isVisible():
-                            all_hidden = False
-                            break
-                    if all_hidden and not category_frame.isHidden():
-                        category_frame.hide()
-
 
     def install_selected_from_grid(self):
         selected = [card._checkbox.app_id for card in self.app_cards if card._checkbox.isChecked()]
@@ -616,17 +523,34 @@ class AppManager(QWidget):
     # ---------------- Installed Tab ----------------
     def setup_installed_tab(self):
         self.tab_installed = QWidget()
-        self.tabs.addTab(self.tab_installed, QIcon.fromTheme("applications-other"), "Installed • Update / Uninstall") # Added icon
+        self.tabs.addTab(self.tab_installed, QIcon(), "Installed • Update / Uninstall")
+        # Add an icon to the tab
+        svg_installed = """<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e8e8e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-package"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>"""
+        self.tabs.setTabIcon(2, self.get_svg_icon(svg_installed))
+
         v = QVBoxLayout(self.tab_installed)
 
         top = QHBoxLayout()
         self.search_installed = QLineEdit()
         self.search_installed.setPlaceholderText("Search installed apps...")
-        self.btn_refresh_installed = QPushButton(QIcon.fromTheme("view-refresh"), "Refresh") # Added icon
+        self.btn_refresh_installed = QPushButton("Refresh")
         self.btn_refresh_installed.setProperty("class", "secondary")
-        self.btn_update_selected = QPushButton(QIcon.fromTheme("system-software-update"), "Update Selected") # Added icon
-        self.btn_uninstall_selected = QPushButton(QIcon.fromTheme("edit-delete"), "Uninstall Selected") # Added icon
-        top.addWidget(QLabel("Search:"))
+        self.btn_update_selected = QPushButton("Update Selected")
+        self.btn_uninstall_selected = QPushButton("Uninstall Selected")
+
+        # Add icons to buttons
+        icon_refresh_btn = QIcon.fromTheme("view-refresh")
+        if not icon_refresh_btn.isNull():
+            self.btn_refresh_installed.setIcon(icon_refresh_btn)
+        
+        icon_update_btn = QIcon.fromTheme("arrow-up")
+        if not icon_update_btn.isNull():
+            self.btn_update_selected.setIcon(icon_update_btn)
+
+        icon_uninstall_btn = QIcon.fromTheme("edit-delete")
+        if not icon_uninstall_btn.isNull():
+            self.btn_uninstall_selected.setIcon(icon_uninstall_btn)
+
         top.addWidget(self.search_installed, 1)
         top.addWidget(self.btn_refresh_installed)
         top.addWidget(self.btn_update_selected)
@@ -634,7 +558,7 @@ class AppManager(QWidget):
         v.addLayout(top)
 
         self.tree_installed = QTreeWidget()
-        self.tree_installed.setHeaderLabels(["Name","Id","Version","Available"])
+        self.tree_installed.setHeaderLabels(["Name", "Id", "Version", "Available"])
         self.tree_installed.setSelectionMode(QTreeWidget.MultiSelection)
         v.addWidget(self.tree_installed, 1)
 
@@ -649,13 +573,9 @@ class AppManager(QWidget):
 
     def populate_installed(self):
         self.tree_installed.clear()
-        
-        QApplication.setOverrideCursor(Qt.WaitCursor)
         items = winget_list_installed()
-        QApplication.restoreOverrideCursor()
-
         for it in items:
-            row = QTreeWidgetItem([ it.get("Name",""), it.get("Id",""), "", ""])
+            row = QTreeWidgetItem([it.get("Name", ""), it.get("Id", ""), "", ""])
             self.tree_installed.addTopLevelItem(row)
         for i in range(self.tree_installed.columnCount()):
             self.tree_installed.resizeColumnToContents(i)
@@ -681,13 +601,6 @@ class AppManager(QWidget):
         if not selected:
             QMessageBox.information(self, "Info", "Select installed apps first.")
             return
-        
-        confirm = QMessageBox.question(self, "Confirm Uninstall", 
-                                      f"Are you sure you want to uninstall {len(selected)} selected applications? This action cannot be undone.",
-                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-        if confirm == QMessageBox.No:
-            return
-            
         ids = [r.text(1) for r in selected]
         self.task_queue.append(("Uninstalling", ids))
         self.process_task_queue()
@@ -695,14 +608,80 @@ class AppManager(QWidget):
     # ---------------- Progress Tab ----------------
     def setup_progress_tab(self):
         self.tab_progress = QWidget()
-        self.tabs.addTab(self.tab_progress, QIcon.fromTheme("document-properties"), "Progress") # Added icon
+        self.tabs.addTab(self.tab_progress, QIcon(), "Progress")
+        # Add an icon to the tab
+        svg_progress = """<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e8e8e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-activity"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>"""
+        self.tabs.setTabIcon(3, self.get_svg_icon(svg_progress))
+
         v = QVBoxLayout(self.tab_progress)
 
         self.progress_log = QTextEdit()
         self.progress_log.setReadOnly(True)
-        self.progress_log.setStyleSheet("font-family: 'Consolas', 'Courier New', monospace; font-size: 9pt; background-color: #222222; color: #f0f0f0;")
-        
         self.progress_bar = QProgressBar()
-        self.progress_bar.setFormat("%p% - %v/%m") # Show percentage and current/total
-        
-        self.btn_cancel_progress = QPushButton(QIcon.fromTheme("process-stop"), "Cancel") # Added
+        self.progress_bar.setStyleSheet("""
+            QProgressBar {
+                background-color: #333;
+                color: #fff;
+                border-radius: 5px;
+                text-align: center;
+            }
+            QProgressBar::chunk {
+                background-color: #1f6feb;
+                border-radius: 5px;
+            }
+        """)
+
+        self.btn_cancel_progress = QPushButton("Cancel")
+        self.btn_cancel_progress.setProperty("class", "secondary")
+        h = QHBoxLayout()
+        h.addWidget(self.progress_bar, 1)
+        h.addWidget(self.btn_cancel_progress)
+        v.addWidget(self.progress_log, 1)
+        v.addLayout(h)
+
+        self.btn_cancel_progress.clicked.connect(self.cancel_worker)
+
+    def process_task_queue(self):
+        if self.worker and getattr(self.worker, "isRunning", None) and self.worker.isRunning():
+            # worker busy
+            return
+        if not self.task_queue:
+            return
+        action_label, ids = self.task_queue.pop(0)
+        self.start_worker(ids, action_label)
+
+    def start_worker(self, ids, action_label):
+        self.progress_log.clear()
+        self.progress_bar.setValue(0)
+        self.worker = WorkerThread(ids, action_label)
+        self.worker.progress_signal.connect(self.on_worker_progress)
+        self.worker.finished_signal.connect(self.on_worker_finished)
+        self.worker.start()
+        self.tabs.setCurrentWidget(self.tab_progress)
+
+    def on_worker_progress(self, message, percent):
+        self.progress_log.append(message)
+        try:
+            p = max(0, min(100, int(percent)))
+        except Exception:
+            p = 0
+        self.progress_bar.setValue(p)
+
+    def on_worker_finished(self, summary):
+        self.progress_log.append(f"Worker finished: {summary}")
+        self.worker = None
+        self.populate_installed()
+        self.process_task_queue()
+
+    def cancel_worker(self):
+        if self.worker:
+            self.worker.cancel()
+
+# --------------------------
+# Run
+# --------------------------
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    w = AppManager()
+    w.show()
+    sys.exit(app.exec())
